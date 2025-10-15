@@ -7,6 +7,9 @@
 /vendor/
 # composer.lock - Keep for production consistency
 
+# Metronic Theme (Large - can be downloaded separately)
+/lisanstema/
+
 # Storage
 /storage/logs/*.log
 /storage/cache/*
