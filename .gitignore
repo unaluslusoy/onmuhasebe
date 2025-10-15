@@ -1,0 +1,61 @@
+# Environment
+.env
+.env.backup
+.env.production
+
+# Composer
+/vendor/
+# composer.lock - Keep for production consistency
+
+# Storage
+/storage/logs/*.log
+/storage/cache/*
+!/storage/cache/.gitkeep
+/storage/temp/*
+!/storage/temp/.gitkeep
+/storage/uploads/*
+!/storage/uploads/.gitkeep
+/storage/backups/*
+!/storage/backups/.gitkeep
+
+# Public uploads
+/public/uploads/*
+!/public/uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# PHP
+*.cache
+*.log
+
+# Node (if needed later)
+/node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+
+# Test
+/tests/coverage/
+.phpunit.result.cache
+
+# Temporary files
+/public/test-*.php
+/public/test-*.html
+/public/debug-*.php
+*.tmp
+*.temp
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+desktop.ini

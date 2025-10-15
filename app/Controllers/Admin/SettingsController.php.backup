@@ -1,0 +1,338 @@
+<?php
+
+namespace App\Controllers\Admin;
+
+use App\Models\User;
+use App\Models\Compan        $data = [
+            'user' => $user,
+            'company' => $company,
+            'activeTab' => 'sirket',
+            'pageTitle' => 'Şirket Ayarları',
+            'pageIcon' => 'ki-duotone ki-setting-2',
+            'breadcrumbs' => [
+                ['text' => 'Anasayfa', 'url' => '/'],
+                ['text' => 'Ayarlar', 'url' => '/ayarlar'],
+                ['Şirket', 'url' => null]
+            ]
+        ];\Helpers\Response;
+
+/**
+ * Settings Controller
+ * Handles settings pages and company image uploads
+ */
+class SettingsController
+{
+    private User $userModel;
+    private Company $companyModel;
+
+    public function __construct()
+    {
+        $this->userModel = new User();
+        $this->companyModel = new Company();
+    }
+
+    /**
+     * General settings page
+     */
+    public function genel()
+    {
+        $userId = $_SESSION['user_id'] ?? null;
+        
+        if (!$userId) {
+            header('Location: /auth/login');
+            exit;
+        }
+
+        $user = $this->userModel->find($userId);
+        
+        if (!$user) {
+            header('Location: /auth/login');
+            exit;
+        }
+
+        $company = null;
+        if (!empty($user['company_id'])) {
+            $company = $this->companyModel->find($user['company_id']);
+        }
+
+        $data = [
+            'user' => $user,
+            'company' => $company,
+            'activeTab' => 'genel',
+            'pageTitle' => 'Genel Ayarlar',
+            'pageIcon' => 'ki-duotone ki-setting-2',
+            'breadcrumbs' => [
+                ['text' => 'Anasayfa', 'url' => '/'],
+                ['text' => 'Ayarlar', 'url' => '/ayarlar'],
+                ['text' => 'Genel', 'url' => null]
+            ]
+        ];
+
+        extract($data);
+        $contentFile = __DIR__ . '/../../Views/settings/genel.php';
+        require_once __DIR__ . '/../../Views/layouts/master.php';
+    }
+
+    /**
+     * Company settings page
+     */
+    public function sirket()
+    {
+        $userId = $_SESSION['user_id'] ?? null;
+        
+        if (!$userId) {
+            header('Location: /auth/login');
+            exit;
+        }
+
+        $user = $this->userModel->find($userId);
+        
+        if (!$user) {
+            header('Location: /auth/login');
+            exit;
+        }
+
+        $company = null;
+        if (!empty($user['company_id'])) {
+            $company = $this->companyModel->find($user['company_id']);
+        }
+
+        $data = [
+            'user' => $user,
+            'company' => $company,
+            'pageTitle' => 'Şirket Ayarları',
+            'pageIcon' => 'ki-duotone ki-setting-2',
+            'breadcrumbs' => [
+                ['text' => 'Anasayfa', 'url' => '/'],
+                ['text' => 'Ayarlar', 'url' => '/ayarlar'],
+                ['text' => 'Şirket', 'url' => null]
+            ]
+        ];
+
+        extract($data);
+        $contentFile = __DIR__ . '/../../Views/settings/sirket.php';
+        require_once __DIR__ . '/../../Views/layouts/master.php';
+    }
+
+    /**
+     * Update company images (logo, stamp, signature)
+     * POST /ayarlar/sirket/gorseller
+     */
+    public function updateCompanyImages()
+    {
+        error_log('=== updateCompanyImages CALLED ===');
+        error_log('POST: ' . json_encode($_POST));
+        error_log('FILES: ' . json_encode(array_keys($_FILES)));
+        
+        $userId = $_SESSION['user_id'] ?? null;
+        error_log('User ID: ' . ($userId ?? 'NULL'));
+        
+        if (!$userId) {
+            error_log('ERROR: No user ID in session');
+            return Response::json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $user = $this->userModel->find($userId);
+        error_log('User found: ' . ($user ? 'YES' : 'NO'));
+        
+        if (!$user || empty($user['company_id'])) {
+            error_log('ERROR: User not found or no company');
+            return Response::json([
+                'success' => false,
+                'message' => 'Şirket bulunamadı'
+            ], 404);
+        }
+
+        $companyId = $user['company_id'];
+        error_log('Company ID: ' . $companyId);
+        $company = $this->companyModel->find($companyId);
+        
+        if (!$company) {
+            return Response::json([
+                'success' => false,
+                'message' => 'Şirket bilgileri bulunamadı'
+            ], 404);
+        }
+
+        $uploadDir = __DIR__ . '/../../../storage/uploads/companies/' . $companyId . '/';
+        
+        // Klasör yoksa oluştur
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0755, true);
+        }
+
+        $data = [];
+        $imageTypes = ['company_logo', 'company_stamp', 'company_signature'];
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+        $maxSize = 5 * 1024 * 1024; // 5MB
+
+        foreach ($imageTypes as $type) {
+            // Silme isteği kontrolü
+            if (isset($_POST[$type . '_remove']) && $_POST[$type . '_remove'] === '1') {
+                if (!empty($company[$type]) && file_exists($uploadDir . $company[$type])) {
+                    unlink($uploadDir . $company[$type]);
+                }
+                $data[$type] = null;
+                continue;
+            }
+
+            // Yeni dosya yükleme kontrolü
+            if (isset($_FILES[$type]) && $_FILES[$type]['error'] === UPLOAD_ERR_OK) {
+                $fileInfo = pathinfo($_FILES[$type]['name']);
+                $extension = strtolower($fileInfo['extension']);
+                
+                // Dosya türü kontrolü
+                if (!in_array($extension, $allowedExtensions)) {
+                    return Response::json([
+                        'success' => false,
+                        'message' => $type . ': Sadece JPG, JPEG, PNG ve WebP dosyaları yüklenebilir'
+                    ], 422);
+                }
+
+                // Dosya boyutu kontrolü
+                if ($_FILES[$type]['size'] > $maxSize) {
+                    return Response::json([
+                        'success' => false,
+                        'message' => $type . ': Dosya boyutu maksimum 5MB olabilir'
+                    ], 422);
+                }
+
+                // Benzersiz dosya adı oluştur
+                $fileName = $type . '_' . time() . '.' . $extension;
+                $filePath = $uploadDir . $fileName;
+
+                // Dosyayı kaydet
+                if (move_uploaded_file($_FILES[$type]['tmp_name'], $filePath)) {
+                    // Eski dosyayı sil
+                    if (!empty($company[$type]) && file_exists($uploadDir . $company[$type])) {
+                        unlink($uploadDir . $company[$type]);
+                    }
+                    
+                    $data[$type] = $fileName;
+                }
+            }
+        }
+
+        // En az bir görsel güncellendiyse
+        if (!empty($data)) {
+            $updated = $this->companyModel->update($companyId, $data);
+
+            if ($updated) {
+                return Response::json([
+                    'success' => true,
+                    'message' => 'Şirket görselleri başarıyla güncellendi'
+                ]);
+            }
+        }
+
+        return Response::json([
+            'success' => false,
+            'message' => 'Hiçbir değişiklik yapılmadı'
+        ], 400);
+    }
+
+    /**
+     * Update general settings
+     */
+    public function updateGenel()
+    {
+        $userId = $_SESSION['user_id'] ?? null;
+        
+        if (!$userId) {
+            return Response::json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        // Buraya genel ayarlar güncelleme mantığı eklenecek
+        return Response::json([
+            'success' => true,
+            'message' => 'Genel ayarlar güncellendi'
+        ]);
+    }
+
+    /**
+     * Update company information
+     */
+    public function updateSirket()
+    {
+        error_log('=== updateSirket CALLED ===');
+        error_log('POST: ' . json_encode($_POST));
+        
+        $userId = $_SESSION['user_id'] ?? null;
+        
+        if (!$userId) {
+            error_log('ERROR: No user ID in session');
+            return Response::json(['success' => false, 'message' => 'Unauthorized'], 401);
+        }
+
+        $user = $this->userModel->find($userId);
+        
+        if (!$user || empty($user['company_id'])) {
+            error_log('ERROR: User not found or no company');
+            return Response::json([
+                'success' => false,
+                'message' => 'Şirket bulunamadı'
+            ], 404);
+        }
+
+        $companyId = $user['company_id'];
+        error_log('Company ID: ' . $companyId);
+
+        // Validasyon
+        $errors = [];
+        $data = [];
+
+        // Şirket adı (zorunlu)
+        if (empty($_POST['name'])) {
+            $errors['name'] = 'Şirket adı gereklidir';
+        } else {
+            $data['name'] = trim($_POST['name']);
+        }
+
+        // İsteğe bağlı alanlar
+        $optionalFields = [
+            'tax_office' => 'Vergi Dairesi',
+            'tax_number' => 'Vergi Numarası',
+            'address' => 'Adres',
+            'phone' => 'Telefon',
+            'email' => 'E-posta',
+            'website' => 'Website'
+        ];
+
+        foreach ($optionalFields as $field => $label) {
+            if (isset($_POST[$field])) {
+                $data[$field] = trim($_POST[$field]) ?: null;
+            }
+        }
+
+        // Email validasyonu
+        if (!empty($data['email']) && !filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Geçersiz e-posta adresi';
+        }
+
+        if (!empty($errors)) {
+            error_log('Validation errors: ' . json_encode($errors));
+            return Response::json([
+                'success' => false,
+                'message' => 'Validasyon hatası',
+                'errors' => $errors
+            ], 400);
+        }
+
+        // Güncelleme
+        $updated = $this->companyModel->update($companyId, $data);
+
+        if ($updated) {
+            error_log('Company updated successfully');
+            return Response::json([
+                'success' => true,
+                'message' => 'Şirket bilgileri başarıyla güncellendi'
+            ]);
+        }
+
+        error_log('ERROR: Update failed');
+        return Response::json([
+            'success' => false,
+            'message' => 'Şirket bilgileri güncellenemedi'
+        ], 500);
+    }
+}

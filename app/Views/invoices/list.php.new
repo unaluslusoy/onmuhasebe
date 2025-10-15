@@ -1,0 +1,69 @@
+<?php
+/**
+ * Faturalar Listesi Sayfası
+ * Master layout kullanarak render edilir
+ */
+
+// Sayfa değişkenleri
+$pageTitle = 'Faturalar';
+$pageIcon = 'ki-duotone ki-file';
+$breadcrumbs = [
+    ['text' => 'Ana Sayfa', 'url' => '/'],
+    ['text' => 'Faturalar']
+];
+
+// Toolbar aksiyonları
+ob_start();
+?>
+<button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_filter_invoices">
+    <i class="ki-duotone ki-filter fs-2">
+        <span class="path1"></span>
+        <span class="path2"></span>
+    </i>
+    Filtrele
+</button>
+<a href="/fatura/olustur" class="btn btn-primary">
+    <i class="ki-duotone ki-plus fs-2"></i>
+    Yeni Fatura
+</a>
+<?php
+$toolbarActions = ob_get_clean();
+
+// Ek CSS
+ob_start();
+?>
+<!-- DataTables -->
+<link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+<link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css" rel="stylesheet">
+<style>
+    .badge-light-success { background-color: #e8fff3; color: #50cd89; }
+    .badge-light-warning { background-color: #fff8dd; color: #ffc700; }
+    .badge-light-danger { background-color: #ffe2e5; color: #f1416c; }
+    .badge-light-info { background-color: #e1f0ff; color: #009ef7; }
+    .badge-light-primary { background-color: #e1f0ff; color: #009ef7; }
+    .invoice-actions { white-space: nowrap; }
+</style>
+<?php
+$additionalCSS = ob_get_clean();
+
+// Ek JavaScript
+ob_start();
+?>
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- Invoice List JS -->
+<script src="/assets/js/pages/invoices-list.js"></script>
+<?php
+$additionalJS = ob_get_clean();
+
+// İçerik dosyası
+$contentFile = __DIR__ . '/list-content.php';
+
+// Master layout'u include et
+require_once __DIR__ . '/../layouts/master.php';
+?>

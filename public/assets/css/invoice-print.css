@@ -1,0 +1,90 @@
+/**
+ * Invoice Print Styles
+ * Optimized for printing invoices
+ */
+
+@media print {
+    /* Hide unnecessary elements */
+    #kt_app_sidebar,
+    #kt_app_header,
+    #kt_toolbar,
+    .btn,
+    .dropdown,
+    .breadcrumb,
+    footer,
+    .page-title {
+        display: none !important;
+    }
+    /* Body styles */
+    body {
+        margin: 0;
+        padding: 0;
+        background: white;
+    }
+    /* Page layout */
+    #kt_wrapper,
+    #kt_content,
+    #kt_post,
+    #kt_content_container {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    /* Card styles */
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .card-body {
+        padding: 20px !important;
+    }
+    /* Table styles */
+    table {
+        page-break-inside: avoid;
+    }
+    thead {
+        display: table-header-group;
+    }
+    tr {
+        page-break-inside: avoid;
+    }
+    /* Badge styles - convert to text */
+    .badge {
+        border: 1px solid #e4e6ef;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    /* Sidebar - show in print */
+    .m-0 {
+        display: block !important;
+    }
+    /* Page breaks */
+    .page-break-before {
+        page-break-before: always;
+    }
+    .page-break-after {
+        page-break-after: always;
+    }
+    /* Prevent orphans and widows */
+    p,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        orphans: 3;
+        widows: 3;
+    }
+    /* Links */
+    a[href]:after {
+        content: none !important;
+    }
+    /* Optimize for A4 */
+    @page {
+        size: A4;
+        margin: 1cm;
+    }
+}
