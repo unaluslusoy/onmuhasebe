@@ -6,10 +6,10 @@
     "require": {
         "php": ">=8.2",
         "firebase/php-jwt": "^6.10",
-        "phpmailer/phpmailer": "^6.9",
+        "guzzlehttp/guzzle": "^7.8",
         "league/csv": "^9.15",
         "mpdf/mpdf": "^8.2",
-        "guzzlehttp/guzzle": "^7.8",
+        "phpmailer/phpmailer": "^7.0",
         "predis/predis": "^2.2",
         "vlucas/phpdotenv": "^5.6"
     },
